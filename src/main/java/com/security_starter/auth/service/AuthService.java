@@ -15,6 +15,7 @@ import com.security_starter.common.exception.BadRequestException;
 import com.security_starter.role.entity.RoleEntity;
 import com.security_starter.role.entity.RoleName;
 import com.security_starter.role.repository.RoleRepository;
+import com.security_starter.security.jwt.JwtService;
 import com.security_starter.security.userdetails.CustomUserDetails;
 import com.security_starter.user.entity.UserEntity;
 import com.security_starter.user.repository.UserRepository;
@@ -29,6 +30,7 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -77,9 +79,11 @@ public class AuthService {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         UserEntity user = userDetails.getUser();
 
+        String accessToken = jwtService.generateAccessToken(userDetails);
+
         return new AuthResponse(
-                "TEMP_ACCESS_TOKEN",
-                "TEMP_REFRESH_TOKEN",
+                accessToken,
+                null, // refresh token later
                 "Bearer",
                 900L,
                 user.getUsername(),
