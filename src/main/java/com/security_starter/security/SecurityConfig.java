@@ -13,7 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.security_starter.security.filter.JwtAuthenticationFilter;
 import com.security_starter.security.handler.JwtAccessDeniedHandler;
 import com.security_starter.security.handler.JwtAuthenticationEntryPoint;
 import com.security_starter.security.userdetails.CustomUserDetailsService;
@@ -27,46 +29,53 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAccessDeniedHandler accessDeniedHandler;
-
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+        	.csrf(csrf -> csrf.disable())
 
-                .headers(headers ->
-                        headers.frameOptions(frame -> frame.disable())
-                )
+            .headers(headers ->
+            	headers.frameOptions(frame -> frame.disable())
+            	)
+            .exceptionHandling(exceptions -> exceptions
+            		.authenticationEntryPoint(authenticationEntryPoint)
+                    .accessDeniedHandler(accessDeniedHandler)
+                    )
 
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler)
-                )
+            .sessionManagement(session -> session
+            		.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            		)
 
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+            .authorizeHttpRequests(auth -> auth
+            		.requestMatchers(
+            				"/swagger-ui.html",
+                            "/swagger-ui/**",
+                            "/api-docs/**",
+                            "/v3/api-docs/**"
+                    ).permitAll()
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/api-docs/**"
-                        ).permitAll()
+                    .requestMatchers("/h2-console/**").permitAll()
 
-                        .requestMatchers("/h2-console/**").permitAll()
+                    .requestMatchers("/auth/**").permitAll()
 
-                        .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/health").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/health").permitAll()
-
-                        .anyRequest().authenticated()
+                    .anyRequest().authenticated()
                 )
 
                 .authenticationProvider(authenticationProvider())
 
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
-
+        
+        http
+        	.addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
+        
         return http.build();
     }
 
