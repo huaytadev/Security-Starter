@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.security_starter.auth.dto.AuthResponse;
 import com.security_starter.auth.dto.LoginRequest;
+import com.security_starter.auth.dto.LogoutRequest;
+import com.security_starter.auth.dto.RefreshTokenRequest;
 import com.security_starter.auth.dto.RegisterRequest;
 import com.security_starter.auth.service.AuthService;
 import com.security_starter.common.response.ApiResponse;
@@ -53,6 +55,35 @@ public class AuthController {
                         "Login successful",
                         response
                 )
+        );
+    }
+    
+    @PostMapping("/refresh")
+    @Operation(summary = "Generate a new access token using a refresh token")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+
+        AuthResponse response = authService.refresh(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Token refreshed successfully",
+                        response
+                )
+        );
+    }
+    
+    @PostMapping("/logout")
+    @Operation(summary = "Logout user")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @Valid @RequestBody LogoutRequest request
+    ) {
+
+        authService.logout(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Logout successful")
         );
     }
 }
