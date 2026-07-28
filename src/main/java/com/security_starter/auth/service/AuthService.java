@@ -4,14 +4,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.security_starter.auth.dto.AuthResponse;
 import com.security_starter.auth.dto.LoginRequest;
+import com.security_starter.auth.dto.LogoutRequest;
+import com.security_starter.auth.dto.RefreshTokenRequest;
 import com.security_starter.auth.dto.RegisterRequest;
 import com.security_starter.common.exception.BadRequestException;
+import com.security_starter.common.exception.ForbiddenException;
+import com.security_starter.refreshtoken.entity.RefreshTokenEntity;
+import com.security_starter.refreshtoken.service.RefreshTokenService;
 import com.security_starter.role.entity.RoleEntity;
 import com.security_starter.role.entity.RoleName;
 import com.security_starter.role.repository.RoleRepository;
@@ -31,6 +37,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -80,15 +87,60 @@ public class AuthService {
         UserEntity user = userDetails.getUser();
 
         String accessToken = jwtService.generateAccessToken(userDetails);
+        String refreshToken = refreshTokenService.create(user).getToken();
 
         return new AuthResponse(
                 accessToken,
-                null, // refresh token later
+                refreshToken,
                 "Bearer",
-                900L,
+                jwtService.getAccessTokenExpiration(),
                 user.getUsername(),
                 user.getEmail(),
                 Instant.now()
         );
+    }
+    
+    public AuthResponse refresh(RefreshTokenRequest request) {
+
+    	RefreshTokenEntity refreshToken =
+    	        refreshTokenService.rotate(request.refreshToken());
+
+    	UserEntity user = refreshToken.getUser();
+
+    	String accessToken = jwtService.generateAccessToken(user);
+
+    	return new AuthResponse(
+    	        accessToken,
+    	        refreshToken.getToken(),
+    	        "Bearer",
+    	        jwtService.getAccessTokenExpiration(),
+    	        user.getUsername(),
+    	        user.getEmail(),
+    	        Instant.now()
+    	);
+    }
+    
+    public void logout(LogoutRequest request) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("Authenticated user not found.")
+                );
+
+        RefreshTokenEntity refreshToken =
+                refreshTokenService.verify(request.refreshToken());
+
+        if (!refreshToken.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException(
+                    "Refresh token does not belong to authenticated user"
+            );
+        }
+
+        refreshTokenService.revoke(request.refreshToken());
     }
 }
