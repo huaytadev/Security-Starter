@@ -58,7 +58,11 @@ public class SecurityConfig {
 
                     .requestMatchers("/h2-console/**").permitAll()
 
-                    .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers(
+                            "/auth/register",
+                            "/auth/login",
+                            "/auth/refresh"
+                    ).permitAll()
 
                     .requestMatchers(HttpMethod.GET, "/health").permitAll()
 

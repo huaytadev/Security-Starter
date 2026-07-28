@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.security_starter.security.userdetails.CustomUserDetails;
+import com.security_starter.user.entity.UserEntity;
+
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -33,6 +36,14 @@ public class JwtService {
         claims.put("type", "access");
 
         return buildToken(claims, userDetails, accessTokenExpiration);
+    }
+    
+    public String generateAccessToken(UserEntity user) {
+        return generateAccessToken(new CustomUserDetails(user));
+    }
+    
+    public long getAccessTokenExpiration() {
+        return accessTokenExpiration / 1000;
     }
 
     private String buildToken(
