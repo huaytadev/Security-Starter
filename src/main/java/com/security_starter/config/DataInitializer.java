@@ -59,7 +59,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createRoles() {
-        RoleEntity userRole = createRoleIfNotExists(
+        createOrUpdateRole(
                 RoleName.USER,
                 "Basic user role",
                 Set.of(
@@ -67,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
                 )
         );
 
-        RoleEntity moderatorRole = createRoleIfNotExists(
+        createOrUpdateRole(
                 RoleName.MODERATOR,
                 "Moderator role",
                 Set.of(
@@ -76,27 +76,29 @@ public class DataInitializer implements CommandLineRunner {
                 )
         );
 
-        RoleEntity adminRole = createRoleIfNotExists(
+        createOrUpdateRole(
                 RoleName.ADMIN,
                 "Administrator role",
                 Set.copyOf(permissionRepository.findAll())
         );
     }
-
-    private RoleEntity createRoleIfNotExists(
+    
+    private RoleEntity createOrUpdateRole(
             RoleName roleName,
             String description,
             Set<PermissionEntity> permissions
     ) {
-        return roleRepository.findByName(roleName)
-                .orElseGet(() -> {
-                    RoleEntity role = new RoleEntity();
-                    role.setName(roleName);
-                    role.setDescription(description);
-                    role.setPermissions(permissions);
-                    return roleRepository.save(role);
-                });
+
+        RoleEntity role = roleRepository.findByName(roleName)
+                .orElseGet(RoleEntity::new);
+
+        role.setName(roleName);
+        role.setDescription(description);
+        role.setPermissions(permissions);
+
+        return roleRepository.save(role);
     }
+
 
     private PermissionEntity getPermission(String name) {
         return permissionRepository.findByName(name)
