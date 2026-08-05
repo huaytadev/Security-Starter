@@ -25,7 +25,7 @@ import lombok.Setter;
 @Table(name = "users")
 public class UserEntity extends BaseAuditableEntity {
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
 
     @Column(nullable = false, unique = true, length = 100)

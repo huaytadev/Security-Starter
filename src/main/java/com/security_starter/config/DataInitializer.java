@@ -5,6 +5,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.security_starter.common.constants.Permissions;
 import com.security_starter.permission.entity.PermissionEntity;
 import com.security_starter.permission.repository.PermissionRepository;
 import com.security_starter.role.entity.RoleEntity;
@@ -34,18 +35,20 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createPermissions() {
         List<String> permissions = List.of(
-                "user:read",
-                "user:create",
-                "user:update",
-                "user:delete",
-                "role:read",
-                "role:create",
-                "role:update",
-                "role:delete",
-                "permission:read",
-                "permission:create",
-                "permission:update",
-                "permission:delete"
+                Permissions.USER_READ,
+                Permissions.USER_CREATE,
+                Permissions.USER_UPDATE,
+                Permissions.USER_DELETE,
+
+                Permissions.ROLE_READ,
+                Permissions.ROLE_CREATE,
+                Permissions.ROLE_UPDATE,
+                Permissions.ROLE_DELETE,
+
+                Permissions.PERMISSION_READ,
+                Permissions.PERMISSION_CREATE,
+                Permissions.PERMISSION_UPDATE,
+                Permissions.PERMISSION_DELETE
         );
 
         for (String permissionName : permissions) {
@@ -63,7 +66,7 @@ public class DataInitializer implements CommandLineRunner {
                 RoleName.USER,
                 "Basic user role",
                 Set.of(
-                        getPermission("user:read")
+                        getPermission(Permissions.USER_READ)
                 )
         );
 
@@ -71,8 +74,8 @@ public class DataInitializer implements CommandLineRunner {
                 RoleName.MODERATOR,
                 "Moderator role",
                 Set.of(
-                        getPermission("user:read"),
-                        getPermission("user:update")
+                		getPermission(Permissions.USER_READ),
+                        getPermission(Permissions.USER_UPDATE)
                 )
         );
 

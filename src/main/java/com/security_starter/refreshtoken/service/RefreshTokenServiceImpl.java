@@ -1,8 +1,9 @@
 package com.security_starter.refreshtoken.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.security_starter.common.exception.UnauthorizedException;
@@ -11,7 +12,6 @@ import com.security_starter.refreshtoken.repository.RefreshTokenRepository;
 import com.security_starter.user.entity.UserEntity;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +19,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
-    private static final long REFRESH_TOKEN_DURATION_DAYS = 7;
+	@Value("${spring.jwt.refresh-token-expiration}")
+    private Long refreshTokenExpiration;
 
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -31,7 +32,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setUser(user);
         refreshToken.setExpiresAt(
-                Instant.now().plus(REFRESH_TOKEN_DURATION_DAYS, ChronoUnit.DAYS)
+        		Instant.now().plusMillis(refreshTokenExpiration)
         );
         refreshToken.setRevoked(false);
 
@@ -43,10 +44,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         RefreshTokenEntity refreshToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Refresh token not found"));
+                        new UnauthorizedException("Invalid or expired refresh token."));
 
         if (refreshToken.isRevoked()) {
-            throw new UnauthorizedException("Refresh token has been revoked.");
+            throw new UnauthorizedException("Invalid or expired refresh token.");
         }
 
         if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
@@ -54,7 +55,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             refreshToken.setRevoked(true);
             refreshTokenRepository.save(refreshToken);
 
-            throw new UnauthorizedException("Refresh token has expired.");
+            throw new UnauthorizedException("Invalid or expired refresh token.");
         }
 
         return refreshToken;

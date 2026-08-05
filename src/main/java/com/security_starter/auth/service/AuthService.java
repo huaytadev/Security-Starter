@@ -105,18 +105,13 @@ public class AuthService {
     }
     
     public void logout(LogoutRequest request) {
-
-    	String email = SecurityUtils.getCurrentUserEmail();
-
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new IllegalStateException("Authenticated user not found.")
-                );
+    	
+        UserEntity authenticatedUser = SecurityUtils.getCurrentUser();
 
         RefreshTokenEntity refreshToken =
                 refreshTokenService.verify(request.refreshToken());
 
-        if (!refreshToken.getUser().getId().equals(user.getId())) {
+        if (!refreshToken.getUser().getId().equals(authenticatedUser.getId())) {
             throw new ForbiddenException(
                     "Refresh token does not belong to authenticated user"
             );
