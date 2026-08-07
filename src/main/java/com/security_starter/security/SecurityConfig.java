@@ -63,7 +63,8 @@ public class SecurityConfig {
                             "/auth/login",
                             "/auth/refresh"
                     ).permitAll()
-
+                    
+                    .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers(HttpMethod.GET, "/health").permitAll()
 
                     .anyRequest().authenticated()
