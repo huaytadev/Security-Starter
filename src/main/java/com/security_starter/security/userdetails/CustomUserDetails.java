@@ -16,7 +16,8 @@ import java.util.Set;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final UserEntity user;
+	private static final long serialVersionUID = 1L;
+	private final UserEntity user;
 
     public CustomUserDetails(UserEntity user) {
         this.user = user;
