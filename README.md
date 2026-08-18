@@ -1,3 +1,3 @@
 ## Security starter.
 
-Documentation comming soon.
+Documentation coming soon.
