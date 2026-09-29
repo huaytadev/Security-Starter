@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.huaytadev</groupId>
 	<artifactId>security-starter</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.1.0</version>
 	<name>Security_Starter</name>
 	<description />
 	<url />
@@ -31,17 +31,10 @@
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
-		<!-- H2 Database (runtime) -->
+		<!-- PostgreSQL-->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-
-		<!-- MySQL Connector (runtime) -->
-		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -73,6 +66,16 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+		</dependency>
+
+		<!-- FlyWay -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 
 		<!-- SpringDoc OpenAPI UI -->

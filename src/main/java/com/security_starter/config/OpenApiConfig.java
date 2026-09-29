@@ -19,7 +19,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("User Management API")
-                        .version("1.0.0")
+                        .version("1.1.0")
                         .description("Professional REST API for user management, authentication, authorization, roles and permissions using Spring Security and JWT.")
                         .contact(new Contact()
                                 .name("Kevin")
