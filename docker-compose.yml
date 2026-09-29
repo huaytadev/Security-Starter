@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   app:
@@ -19,38 +17,34 @@ services:
       - .env
 
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
 
     networks:
       - backend-network
 
-  mysql:
+  postgres:
 
-    image: mysql:8.4
+    image: postgres:18
 
-    container_name: securitystarter-mysql
+    container_name: securitystarter-postgres
 
     restart: unless-stopped
 
     env_file:
       - .env
 
-    environment:
-      MYSQL_DATABASE: securitystarter
-      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-
     ports:
-      - "3306:3306"
+      - "5432:5432"
 
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${SPRING_DATASOURCE_PASSWORD}"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
       start_period: 20s
 
     networks:
@@ -58,7 +52,7 @@ services:
 
 volumes:
 
-  mysql-data:
+  postgres-data:
 
 networks:
 
