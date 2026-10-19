@@ -42,7 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
 
-            String jwt = authHeader.substring(7);
+            String jwt = authHeader.substring(7).trim();
+            
+            if(jwt.isBlank()) {
+            	filterChain.doFilter(request, response);
+            	return;
+            }
 
             String email = jwtService.extractUsername(jwt);
 
@@ -70,11 +75,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-
             }
 
-        } catch (JwtException ignored) {
-            // Invalid token
+        } catch (JwtException | IllegalArgumentException ignored) {
+            /*
+             * Invalid or malformed JWT.
+             *
+             * The request continues without authentication,
+             * allowing Spring Security to decide whether the
+             * requested endpoint requires authentication.
+             */
         }
 
         filterChain.doFilter(request, response);

@@ -12,6 +12,8 @@ public interface RefreshTokenService {
     RefreshTokenEntity rotate(String token);
     
     void revoke(String token);
+    
+    void revoke(RefreshTokenEntity refreshToken);
 
     void revokeAll(UserEntity user);
 }

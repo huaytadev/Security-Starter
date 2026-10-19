@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,8 +25,11 @@ import com.security_starter.user.entity.UserEntity;
 @Table(name = "refresh_tokens")
 public class RefreshTokenEntity extends BaseAuditableEntity {
 
-    @Column(nullable = false, unique = true, length = 36)
-    private String token;
+    @Column(name="token_hash", nullable = false, unique = true, length = 64)
+    private String tokenHash;
+    
+    @Column(name="family_id", nullable = false, length = 36)
+    private String familyId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -36,4 +40,12 @@ public class RefreshTokenEntity extends BaseAuditableEntity {
 
     @Column(nullable = false)
     private boolean revoked = false;
+    
+    /*
+     * The raw refresh token is never persisted.
+     * It only exists in memory so it can be returned
+     * to the client after creation/rotation.
+     */
+    @Transient
+    private String token;
 }

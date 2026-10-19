@@ -35,9 +35,10 @@ public class UserController {
 
     @GetMapping("/me")
     @Operation(summary = "Get the authenticated user's profile")
-    @PreAuthorize(
-            "hasAuthority(T(com.security_starter.common.constants.Permissions).USER_READ)"
-    )
+//    @PreAuthorize(
+//            "hasAuthority(T(com.security_starter.common.constants.Permissions).USER_READ)"
+//    )
+    @PreAuthorize("isAuthenticated()")
     public UserResponse me() {
         return userService.getCurrentUser();
     }
