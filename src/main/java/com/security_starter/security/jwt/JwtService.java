@@ -3,6 +3,8 @@ package com.security_starter.security.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -15,17 +17,43 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
-
+	
+	private static final String ACCESS_TOKEN_TYPE="access";
+	private static final int MIN_SECRET_BYTES=32;
+	
     @Value("${spring.jwt.secret}")
     private String jwtSecret;
 
     @Value("${spring.jwt.access-token-expiration}")
     private long accessTokenExpiration;
+    
+    @Value("${spring.jwt.issuer}")
+    private String jwtIssuer;
 
+    @PostConstruct
+    void validateConfiguration() {
+    	if(jwtSecret == null || jwtSecret.isBlank()) {
+    		throw new IllegalStateException("JWT secret must be configured");
+    	}
+    	
+    	if(jwtSecret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
+    		throw new IllegalStateException("JWT secret must contain at least 32 UTF-8 bytes");
+    	}
+    	
+        if (jwtIssuer == null || jwtIssuer.isBlank()) {
+            throw new IllegalStateException("JWT issuer must be configured");
+        }
+
+        if (accessTokenExpiration <= 0) {
+            throw new IllegalStateException("JWT access token expiration must be greater than zero");
+        }
+    }
+    
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
@@ -33,7 +61,7 @@ public class JwtService {
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
-        claims.put("type", "access");
+        claims.put("type", ACCESS_TOKEN_TYPE);
 
         return buildToken(claims, userDetails, accessTokenExpiration);
     }
@@ -56,6 +84,8 @@ public class JwtService {
 
         return Jwts.builder()
                 .claims(claims)
+                .id(UUID.randomUUID().toString())
+                .issuer(jwtIssuer)
                 .subject(userDetails.getUsername())
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -70,6 +100,14 @@ public class JwtService {
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+    
+    public String extractTokenId(String token) {
+    	return extractClaim(token, Claims::getId);
+    }
+
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("type",String.class));
+    }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         Claims claims = extractAllClaims(token);
@@ -78,6 +116,8 @@ public class JwtService {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
+        		.requireIssuer(jwtIssuer)
+        		.require("type", ACCESS_TOKEN_TYPE)
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
@@ -91,7 +131,9 @@ public class JwtService {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         String username = extractUsername(token);
 
-        return username.equals(userDetails.getUsername())
-                && !isTokenExpired(token);
+        String tokenType = extractTokenType(token);
+        
+        return ACCESS_TOKEN_TYPE.equals(tokenType) 
+        		&& username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 }

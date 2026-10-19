@@ -64,7 +64,7 @@ public class DataInitializer implements CommandLineRunner {
         PermissionEntity roleDelete = getPermission("ROLE_DELETE");
 
         Set<PermissionEntity> userPermissions = new HashSet<>();
-        userPermissions.add(userRead);
+//        userPermissions.add(userRead);
 
         createRoleIfNotExists(
                 RoleName.USER,
@@ -74,7 +74,7 @@ public class DataInitializer implements CommandLineRunner {
 
         Set<PermissionEntity> moderatorPermissions = new HashSet<>();
         moderatorPermissions.add(userRead);
-        moderatorPermissions.add(userWrite);
+//        moderatorPermissions.add(userWrite);
         moderatorPermissions.add(roleRead);
 
         createRoleIfNotExists(

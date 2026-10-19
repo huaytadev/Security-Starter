@@ -110,13 +110,15 @@ public class AuthService {
 
         RefreshTokenEntity refreshToken =
                 refreshTokenService.verify(request.refreshToken());
+        
+        UserEntity refreshTokenUser = refreshToken.getUser();
 
-        if (!refreshToken.getUser().getId().equals(authenticatedUser.getId())) {
+        if (!refreshTokenUser.getId().equals(authenticatedUser.getId())) {
             throw new ForbiddenException(
                     "Refresh token does not belong to authenticated user"
             );
         }
 
-        refreshTokenService.revoke(request.refreshToken());
+        refreshTokenService.revoke(refreshToken);
     }
 }
